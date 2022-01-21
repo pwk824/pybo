@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-3">
+        <!-- 사용자오류 표시 -->
+    {% if messages %}
+    <div class="alert alert-danger my-3" role="alert">
+    {% for message in messages %}
+        <strong>{{ message.tags }}</strong>
+        <ul><li>{{ message.message }}</li></ul>
+    {% endfor %}
+    </div>
+    {% endif %}
+    <h2 class="border-bottom py-2">{{ freewriting.title }}</h2>
+    <div class="card my-3">
+        <div class="card-body">
+            <div class="card-text" style="white-space: pre-line;">{{ freewriting.content|safe }}</div>
+            <div class="d-flex justify-content-end">
+        {% if freewriting.modify_date %}
+        <div class="badge badge-light p-2 text-left mx-3">
+            <div class="mb-2">modified at</div>
+            <div>{{ freewriting.modify_date }}</div>
+        </div>
+        {% endif %}
+                <div class="badge badge-light p-2 text-left">
+                    <div class="mb-2">{{ freewriting.author.username }}</div>
+                    <div>{{ freewriting.create_date }}</div>
+                </div>
+            </div>
+            {% if request.user == freewriting.author %}
+        <div class="my-3">
+            <a href="{% url 'freebo:freewriting_modify' freewriting.id %}"
+               class="btn btn-sm btn-outline-secondary">수정</a>
+            <a href="#" class="delete btn btn-sm btn-outline-secondary"
+       data-uri="{% url 'freebo:freewriting_delete' freewriting.id %}">삭제</a>
+        </div>
+        {% endif %}
+        </div>
+    </div>
+    <h5 class="border-bottom my-3 py-2">{{freewriting.replying_set.count}}개의 답변이 있습니다.</h5>
+    {% for replying in freewriting.replying_set.all %}
+    <div class="card my-3">
+        <div class="card-body">
+            <div class="card-text" style="white-space: pre-line;">{{ replying.content }}</div>
+            <div class="d-flex justify-content-end">
+           {% if replying.modify_date %}
+            <div class="badge badge-light p-2 text-left mx-3">
+                <div class="mb-2">modified at</div>
+                <div>{{ replying.modify_date }}</div>
+            </div>
+            {% endif %}
+                <div class="badge badge-light p-2 text-left">
+                    <div class="mb-2">{{ replying.author.username }}</div>
+                    <div>{{ replying.create_date }}</div>
+                </div>
+            </div>
+        {% if request.user == replying.author %}
+        <div class="my-3">
+            <a href="{% url 'freebo:replying_modify' replying.id  %}"
+               class="btn btn-sm btn-outline-secondary">수정</a>
+            <a href="#" class="delete btn btn-sm btn-outline-secondary "
+               data-uri="{% url 'freebo:replying_delete' replying.id  %}">삭제</a>
+        </div>
+        {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    <form action="{% url 'freebo:replying_create' freewriting.id %}" method="post" class="my-3">
+        {% csrf_token %}
+        {% if form.errors %}
+        <div class="alert alert-danger" role="alert">
+        {% for field in form %}
+            {% if field.errors %}
+            <strong>{{ field.label }}</strong>
+            {{ field.errors }}
+            {% endif %}
+        {% endfor %}
+        </div>
+        {% endif %}
+        <div class="form-group">
+                <textarea {% if not user.is_authenticated %}disabled{% endif %}
+              name="content" id="content" class="form-control" rows="10"></textarea>
+        </div>
+        <input type="submit" value="답글등록" class="btn btn-primary">
+    </form>
+</div>
+{% endblock %}
+{% block script %}
+<script type='text/javascript'>
+$(document).ready(function(){
+    $(".delete").on('click', function() {
+        if(confirm("정말로 삭제하시겠습니까?")) {
+            location.href = $(this).data('uri');
+        }
+    });
+});
+</script>
+{% endblock %}
